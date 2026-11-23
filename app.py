@@ -45,7 +45,6 @@ def get_font_path():
 
 
 def escape_ffmpeg_text(text):
-    # FFmpeg drawtext के लिए विशेष चिह्नों को सुरक्षित करना
     text = re.sub(r'[^\w\s\-\|\:\,\.\(\)\/\u0900-\u097F]', '', text)
     text = text.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
     return text.strip()
@@ -82,11 +81,9 @@ def render_video():
         if "audio_file" not in request.files:
             return jsonify({"error": "Missing audio_file binary"}), 400
 
-        # 1. बैकग्राउंड इमेज डाउनलोड करें और ऑडियो बाइनरी सेव करें
         download_gdrive_file(image_url, img_path)
         request.files["audio_file"].save(audio_path)
 
-        # 2. FFmpeg फ़िल्टर तैयार करें (1080x1920 स्केलिंग + लाइव लाल बैनर पट्टी)
         font_path = get_font_path()
         vf_filters = [
             "scale=1080:1920:force_original_aspect_ratio=increase",
@@ -104,15 +101,17 @@ def render_video():
 
         vf_chain = ",".join(vf_filters)
 
-        # 3. MP4 वीडियो रेंडर करें (तेज़ और साफ़ H.264 + AAC)
+        # Low-RAM (<150MB) और तेज़ रेंडरिंग के लिए 2 FPS + ultrafast + 1 thread
         cmd = [
             "ffmpeg", "-y",
-            "-loop", "1", "-framerate", "25", "-i", img_path,
+            "-threads", "1",
+            "-loop", "1", "-framerate", "2", "-i", img_path,
             "-i", audio_path,
             "-vf", vf_chain,
-            "-c:v", "libx264", "-preset", "veryfast", "-tune", "stillimage",
+            "-c:v", "libx264", "-preset", "ultrafast", "-tune", "stillimage",
+            "-r", "15",
             "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k",
+            "-c:a", "aac", "-b:a", "128k",
             "-shortest",
             out_path
         ]
