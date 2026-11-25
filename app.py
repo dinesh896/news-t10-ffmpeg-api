@@ -113,9 +113,9 @@ def render_video():
             clean_banner = re.sub(r'\bT\s+10\b', 'T10', banner_text, flags=re.IGNORECASE)
             safe_text = escape_ffmpeg_text(clean_banner)
 
-            # लाल बैनर के ठीक बीचों-बीच (y=1015) बड़ा और स्पष्ट सफ़ेद बोल्ड टेक्स्ट (fontsize=68)
+            # लाल बैनर के ठीक बीचों-बीच (y=1000) बड़ा और स्पष्ट सफ़ेद बोल्ड टेक्स्ट (fontsize=80)
             vf_filters.append(
-                f"drawtext=fontfile='{font_path}':text='{safe_text}':fontcolor=white:fontsize=80:shadowcolor=black@0.6:shadowx=3:shadowy=3:x=(w-text_w)/2:y=900:text_align=center"
+                f"drawtext=fontfile='{font_path}':text='{safe_text}':fontcolor=white:fontsize=80:shadowcolor=black@0.6:shadowx=3:shadowy=3:x=(w-text_w)/2:y=1000:text_align=center"
             )
 
         vf_chain = ",".join(vf_filters)
